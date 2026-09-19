@@ -32,7 +32,11 @@ const AlertsPage = React.lazy(() => import('./pages/AlertsPage'));
 const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
 
 
-const GOOGLE_CLIENT_ID = "251590210906-adre210t51c7g56uik1jflpknhd4s6re.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+if (!GOOGLE_CLIENT_ID) {
+  console.error("VITE_GOOGLE_CLIENT_ID is not configured");
+}
 
 function App() {
   return (
