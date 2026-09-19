@@ -86,16 +86,26 @@ const HeatmapDashboard = () => {
           style={{ height: '100%', width: '100%', background: '#0f172a' }}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          />
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  maxZoom={19}
+/>
           {/* Heatmap Nodes */}
-          {heatmapData.map((station) => (
-            <Marker
-              key={station.station_id}
-              position={[station.lat, station.lng]}
-              icon={createHeatIcon(station)}
-            >
+{heatmapData
+  .filter(
+    (station) =>
+      Number.isFinite(Number(station.lat)) &&
+      Number.isFinite(Number(station.lng))
+  )
+  .map((station) => (
+    <Marker
+      key={station.station_id}
+      position={[
+        Number(station.lat),
+        Number(station.lng)
+      ]}
+      icon={createHeatIcon(station)}
+    >
               <Tooltip className="bg-slate-900/90 backdrop-blur-md border border-slate-700 text-white shadow-xl rounded-xl">
                 <div className="p-2">
                   <h4 className="font-bold text-sm">{station.station_name}</h4>
