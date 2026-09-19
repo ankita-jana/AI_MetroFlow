@@ -94,12 +94,6 @@ The frontend is the visual dashboard you interact with in your browser.
 
 The system automatically creates three user accounts when you start the backend for the first time. Use these to log in:
 
-| Role | Email Address | Password |
-| :--- | :--- | :--- |
-| **Administrator** | `admin@metroflow.com` | `admin123` |
-| **Data Analyst** | `analyst@metroflow.com` | `analyst123` |
-| **Metro Operator** | `operator@metroflow.com` | `operator123` |
-
 *(Note: Log in as the **Administrator** to have full access to all pages, including the Admin Panel and Settings).*
 
 ---
