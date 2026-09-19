@@ -34,106 +34,160 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   const getWsUrl = () => {
-    if (typeof window !== 'undefined') {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      let host = window.location.hostname;
-      
-      if (host.includes('devtunnels.ms')) {
-        host = host.replace('-5173', '-8000');
-        return `${protocol}//${host}/api/crowd/ws`;
-      } else if (host !== 'localhost' && host !== '127.0.0.1') {
-        return `${protocol}//${host}:8000/api/crowd/ws`;
-      } else {
-        return `${protocol}//127.0.0.1:8000/api/crowd/ws`;
-      }
-    }
-    return 'ws://127.0.0.1:8000/api/crowd/ws';
+    const wsBaseUrl =
+      import.meta.env.VITE_WS_BASE_URL ||
+      'ws://127.0.0.1:8000';
+  
+    return `${wsBaseUrl}/api/crowd/ws`;
   };
 
   useEffect(() => {
     if (!isAuthenticated) {
       if (wsRef.current) {
         wsRef.current.close();
+        wsRef.current = null;
       }
+      setWsConnected(false);
       return;
     }
-
+  
     let reconnectTimeout;
-    
+    let shouldReconnect = true;
+  
     const connect = () => {
-      console.log("Connecting to MetroFlow WebSocket...");
+      if (!shouldReconnect) return;
+  
       const wsUrl = getWsUrl();
+  
+      console.log("Connecting to MetroFlow WebSocket:", wsUrl);
+  
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
-
+  
       ws.onopen = () => {
         console.log("Connected to MetroFlow WebSocket Server.");
         setWsConnected(true);
       };
-
+  
       ws.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
-          
+  
           if (payload.type === 'init' || payload.type === 'update') {
             setRealTimeData(payload.data);
+  
           } else if (payload.type === 'new_alert') {
-            // Add to toasts list and append to state alerts
             const alert = payload.data;
-            
-            const showNotifications = userRef.current?.settings?.notifications ?? true;
+  
+            const showNotifications =
+              userRef.current?.settings?.notifications ?? true;
+  
             if (showNotifications) {
               addToast(alert.message, alert.level, alert.type);
             }
-            
+  
             setRealTimeData((prev) => ({
               ...prev,
               alerts: [alert, ...prev.alerts].slice(0, 10)
             }));
+  
           } else if (payload.type === 'new_notification') {
             const notif = payload.data;
-            const showNotifications = userRef.current?.settings?.notifications ?? true;
+  
+            const showNotifications =
+              userRef.current?.settings?.notifications ?? true;
+  
             if (showNotifications) {
-              addToast(notif.message, notif.level, notif.title || notif.type);
+              addToast(
+                notif.message,
+                notif.level,
+                notif.title || notif.type
+              );
             }
+  
           } else if (payload.type === 'emergency_announcement') {
             const ann = payload.data;
-            const showNotifications = userRef.current?.settings?.notifications ?? true;
+  
+            const showNotifications =
+              userRef.current?.settings?.notifications ?? true;
+  
             if (showNotifications) {
-                addToast(`ANNOUNCEMENT: ${ann.title} - ${ann.message}`, ann.priority === 'Critical' ? 'Critical' : 'Warning', 'Announcement');
+              addToast(
+                `ANNOUNCEMENT: ${ann.title} - ${ann.message}`,
+                ann.priority === 'Critical' ? 'Critical' : 'Warning',
+                'Announcement'
+              );
             }
+  
           } else if (payload.type === 'schedule_update') {
             const sched = payload.data;
-            const showNotifications = userRef.current?.settings?.notifications ?? true;
+  
+            const showNotifications =
+              userRef.current?.settings?.notifications ?? true;
+  
             if (showNotifications) {
-                addToast(`Schedule Updated: Train ${sched.train_name || 'Train'} is now ${sched.status}`, 'Info', 'Schedule Update');
+              addToast(
+                `Schedule Updated: Train ${
+                  sched.train_name || 'Train'
+                } is now ${sched.status}`,
+                'Info',
+                'Schedule Update'
+              );
             }
           }
+  
         } catch (e) {
-          console.error("Error parsing WebSocket message:", e);
+          console.error(
+            "Error parsing WebSocket message:",
+            e
+          );
         }
       };
-
+  
       ws.onclose = () => {
-        console.log("WebSocket disconnected. Retrying in 5s...");
+        console.log(
+          "WebSocket disconnected."
+        );
+  
         setWsConnected(false);
-        reconnectTimeout = setTimeout(connect, 5000);
+  
+        if (shouldReconnect) {
+          console.log(
+            "Retrying WebSocket connection in 5 seconds..."
+          );
+  
+          reconnectTimeout = setTimeout(
+            connect,
+            5000
+          );
+        }
       };
-
+  
       ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
-        ws.close();
+        console.error(
+          "MetroFlow WebSocket error:",
+          err
+        );
+  
+        setWsConnected(false);
       };
     };
-
+  
     connect();
-
+  
     return () => {
+      shouldReconnect = false;
+  
+      clearTimeout(reconnectTimeout);
+  
       if (wsRef.current) {
         wsRef.current.close();
+        wsRef.current = null;
       }
-      clearTimeout(reconnectTimeout);
+  
+      setWsConnected(false);
     };
+  
   }, [isAuthenticated]);
 
   return (
