@@ -7,7 +7,8 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { 
-  TrendingUp, Train, Users, AlertTriangle, Clock, Building2, HelpCircle 
+  TrendingUp, Train, Users, AlertTriangle, Clock, Building2, HelpCircle, Activity,
+  AlertCircle, Map, Zap, CheckCircle
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -29,29 +30,24 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 6000); // refresh every 6s to show live changes
+    const interval = setInterval(fetchDashboardData, 6000);
     return () => clearInterval(interval);
   }, []);
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#ef4444', '#10b981'];
 
   if (loading) {
     return (
       <div className="space-y-8 animate-pulse">
-        {/* Page Header Skeleton */}
-        <div className="h-8 bg-slate-300 dark:bg-slate-800 rounded w-1/4"></div>
-
-        {/* KPIs Grid Skeleton */}
+        <div className="h-8 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 rounded w-1/4"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-200 dark:bg-slate-900 rounded-2xl"></div>
+            <div key={i} className="h-32 bg-gradient-to-br from-violet-500/5 to-cyan-500/5 rounded-2xl border border-[var(--border)]"></div>
           ))}
         </div>
-
-        {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up delay-200">
-          <div className="lg:col-span-2 h-96 bg-slate-200 dark:bg-slate-900 rounded-2xl"></div>
-          <div className="h-96 bg-slate-200 dark:bg-slate-900 rounded-2xl"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up delay-200">
+          <div className="lg:col-span-2 h-96 bg-gradient-to-br from-violet-500/5 to-cyan-500/5 rounded-2xl border border-[var(--border)]"></div>
+          <div className="h-96 bg-gradient-to-br from-violet-500/5 to-cyan-500/5 rounded-2xl border border-[var(--border)]"></div>
         </div>
       </div>
     );
@@ -59,7 +55,7 @@ const Dashboard = () => {
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center text-red-500 font-bold glass-panel border border-red-500/20 rounded-2xl">
+      <div className="p-8 text-center text-red-400 font-bold glass-card border border-red-500/20 rounded-2xl bg-gradient-to-r from-red-500/5 to-rose-500/5">
         {error || 'Error loading dashboard. Ensure backend and DB are active.'}
       </div>
     );
@@ -70,9 +66,9 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center animate-fade-in-up">
+      <div className="flex justify-between items-center mb-6 animate-fade-in-up">
         <div>
-          <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white">
             System Dashboard
           </h1>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -83,45 +79,93 @@ const Dashboard = () => {
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up delay-100">
-        <GlassmorphicCard className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Passengers Today</span>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white">
-              {kpis.passengersToday.toLocaleString()}
-            </h3>
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="blue" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 shrink-0">
+            <Users size={24} />
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-            <Users size={22} />
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Passengers Today</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.passengersToday.toLocaleString()}</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Live Station Footfall</p>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="emerald" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 shrink-0">
+            <Train size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Active Trains</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.activeTrains}</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Running Fleet</p>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="amber" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 shrink-0">
+            <Clock size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">System Delay Ratio</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.delayPercentage}%</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Headway Gaps</p>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="red" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/25 shrink-0">
+            <AlertTriangle size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Active Alerts</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.activeAlerts}</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Emergency Logs</p>
+          </div>
+        </GlassmorphicCard>
+      </div>
+
+      {/* Second KPI Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up delay-150">
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="violet" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white shadow-lg shadow-purple-500/25 shrink-0">
+            <Building2 size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total Stations</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.totalStations}</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Active Network</p>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="warm" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25 shrink-0">
+            <AlertCircle size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Delayed Trains</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.delayedTrains}</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Behind Schedule</p>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-5 flex items-center gap-4" gradient="cyan" glow>
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 shrink-0">
+            <Activity size={24} />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Avg Occupancy</span>
+            <div className="text-2xl font-black text-slate-800 dark:text-white">{kpis.averageOccupancy}%</div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Passenger Load</p>
           </div>
         </GlassmorphicCard>
 
         <GlassmorphicCard className="flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Trains</span>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white">{kpis.activeTrains}</h3>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Peak Hour</span>
+            <h3 className="text-xl font-black text-slate-800 dark:text-white">{kpis.peakHour}</h3>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
-            <Train size={22} />
-          </div>
-        </GlassmorphicCard>
-
-        <GlassmorphicCard className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">System delay ratio</span>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white">{kpis.delayPercentage}%</h3>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-            <Clock size={22} />
-          </div>
-        </GlassmorphicCard>
-
-        <GlassmorphicCard className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Alerts</span>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white">{kpis.activeAlerts}</h3>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center">
-            <AlertTriangle size={22} />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/25">
+            <TrendingUp size={22} />
           </div>
         </GlassmorphicCard>
       </div>
@@ -132,7 +176,7 @@ const Dashboard = () => {
         <GlassmorphicCard className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-lg">Weekly Passenger Trend</h3>
-            <span className="text-xs font-bold text-green-500 flex items-center gap-1">
+            <span className="text-xs font-bold text-emerald-500 flex items-center gap-1 badge-gradient-emerald px-2 py-1 rounded-full">
               <TrendingUp size={14} /> +3.5% vs last week
             </span>
           </div>
@@ -141,15 +185,15 @@ const Dashboard = () => {
               <AreaChart data={charts.ridershipTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRiders" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.1}/>
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="riders" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorRiders)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)"/>
+                <XAxis dataKey="name" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px', backdropFilter: 'blur(20px)' }} />
+                <Area type="monotone" dataKey="riders" stroke="url(#gradientLine)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRiders)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -161,20 +205,93 @@ const Dashboard = () => {
           <div className="h-72 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" h="100%">
               <RadarChart cx="50%" cy="50%" radius="70%" data={charts.crowdDensity}>
-                <PolarGrid stroke="#94a3b8" opacity={0.2}/>
-                <PolarAngleAxis dataKey="subject" stroke="#94a3b8" fontSize={10} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#94a3b8" opacity={0.3} fontSize={9} />
-                <Radar name="Operator Average" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.35} />
-                <Radar name="Platform Actual" dataKey="B" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} />
-                <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px' }} />
+                <PolarGrid stroke="rgba(139,92,246,0.15)"/>
+                <PolarAngleAxis dataKey="subject" stroke="var(--chart-axis)" fontSize={10} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="var(--chart-axis)" opacity={0.3} fontSize={9} />
+                <Radar name="Operator Average" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.25} strokeWidth={2} />
+                <Radar name="Platform Actual" dataKey="B" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.15} strokeWidth={2} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '12px', color: '#fff', fontSize: '11px', backdropFilter: 'blur(20px)' }} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </GlassmorphicCard>
       </div>
 
+      {/* Second Row Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up delay-200">
+        <GlassmorphicCard className="space-y-4">
+          <h3 className="font-bold text-lg">Passenger Forecast (Next 6 Hrs)</h3>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" h="100%">
+              <AreaChart data={charts.passengerForecast} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#d946ef" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#d946ef" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(217,70,239,0.1)"/>
+                <XAxis dataKey="time" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(217,70,239,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                <Area type="monotone" dataKey="predicted" name="Predicted" stroke="#d946ef" strokeWidth={2} fillOpacity={1} fill="url(#colorPredicted)" />
+                <Area type="monotone" dataKey="actual" name="Actual" stroke="#8b5cf6" strokeWidth={2} fill="none" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="space-y-4">
+          <h3 className="font-bold text-lg">Route Performance / Efficiency</h3>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" h="100%">
+              <BarChart data={charts.routePerformance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.1)"/>
+                <XAxis dataKey="name" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                <Bar dataKey="efficiency" name="Efficiency %" fill="#10b981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassmorphicCard>
+      </div>
+
+      {/* Third Row Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up delay-250">
+        <GlassmorphicCard className="space-y-4">
+          <h3 className="font-bold text-lg">Train Utilization</h3>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" h="100%">
+              <BarChart data={charts.trainOccupancy} layout="vertical" margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(249,115,22,0.1)"/>
+                <XAxis type="number" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <YAxis dataKey="name" type="category" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                <Bar dataKey="occupancy" name="Occupancy %" fill="#f97316" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="space-y-4">
+          <h3 className="font-bold text-lg">Alert Statistics</h3>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" h="100%">
+              <BarChart data={charts.alertStatistics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(244,63,94,0.1)"/>
+                <XAxis dataKey="name" stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--chart-axis)" fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                <Bar dataKey="count" name="Total Alerts" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassmorphicCard>
+      </div>
+
       {/* Bottom Grid: Recent Activity & System Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up delay-300">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up delay-300">
         {/* Top 5 Congested Stations */}
         <GlassmorphicCard className="space-y-4">
           <h3 className="font-bold text-lg">Top Congested Stations</h3>
@@ -182,15 +299,15 @@ const Dashboard = () => {
             {charts.stationCongestion.map((st, idx) => (
               <div key={idx} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span>{st.name}</span>
-                  <span className={st.density > 80 ? 'text-red-500 font-bold' : st.density > 60 ? 'text-orange-500' : 'text-slate-500'}>
+                  <span className="text-slate-800 dark:text-white">{st.name}</span>
+                  <span className={st.density > 80 ? 'text-red-500 dark:text-red-400 font-bold' : st.density > 60 ? 'text-amber-500 dark:text-amber-400' : 'text-cyan-600 dark:text-cyan-400'}>
                     {st.density}% capacity
                   </span>
                 </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-800/80 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-200/50 dark:bg-white/5 h-2.5 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full ${
-                      st.density > 80 ? 'bg-red-500 pulse-red' : st.density > 60 ? 'bg-orange-500' : 'bg-blue-500'
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      st.density > 80 ? 'bg-gradient-to-r from-red-500 to-rose-500 pulse-red' : st.density > 60 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'
                     }`}
                     style={{ width: `${st.density}%` }}
                   />
@@ -210,16 +327,16 @@ const Dashboard = () => {
                   data={charts.delayStatistics}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
+                  innerRadius={55}
                   outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
                 >
                   {charts.delayStatistics.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px' }} />
+                <Tooltip contentStyle={{ background: 'rgba(12,12,29,0.95)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '12px', color: '#fff', fontSize: '11px', backdropFilter: 'blur(20px)' }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -235,12 +352,14 @@ const Dashboard = () => {
                 <li key={activity.id}>
                   <div className="relative pb-6">
                     {idx !== recentActivity.length - 1 ? (
-                      <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-slate-200 dark:bg-slate-800" aria-hidden="true" />
+                      <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gradient-to-b from-violet-500/30 to-cyan-500/30" aria-hidden="true" />
                     ) : null}
                     <div className="relative flex space-x-3">
                       <div>
-                        <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-slate-100 dark:ring-slate-900 ${
-                          activity.type === 'Overcrowding' ? 'bg-red-500/10 text-red-500' : activity.type === 'Train Delay' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'
+                        <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-[var(--card)] ${
+                          activity.type === 'Overcrowding' ? 'bg-gradient-to-br from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/20' 
+                          : activity.type === 'Train Delay' ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20' 
+                          : 'bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20'
                         }`}>
                           <HelpCircle size={16} />
                         </span>
@@ -251,7 +370,7 @@ const Dashboard = () => {
                             {activity.event}
                           </p>
                         </div>
-                        <div className="text-right text-[10px] whitespace-nowrap text-slate-500 font-bold uppercase">
+                        <div className="text-right text-[10px] whitespace-nowrap text-slate-500 dark:text-slate-400 font-bold uppercase">
                           {activity.time}
                         </div>
                       </div>
@@ -260,6 +379,26 @@ const Dashboard = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="space-y-4">
+          <h3 className="font-bold text-lg">AI Operational Insights</h3>
+          <div className="space-y-3 pt-2">
+            {(data.aiInsights || []).map((insight, idx) => (
+              <div key={idx} className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/50 flex gap-3 shadow-sm">
+                <div className="pt-0.5">
+                  {insight.type === 'Predictive' ? <Zap className="text-yellow-500" size={18} /> : 
+                   insight.type === 'Warning' ? <AlertTriangle className="text-red-500" size={18} /> :
+                   insight.type === 'Actionable' ? <Activity className="text-blue-500" size={18} /> :
+                   <CheckCircle className="text-emerald-500" size={18} />}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mb-1">{insight.type}</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-snug">{insight.message}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </GlassmorphicCard>
       </div>

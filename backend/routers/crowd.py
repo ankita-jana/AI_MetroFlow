@@ -51,6 +51,18 @@ async def websocket_endpoint(websocket: WebSocket):
             "data": initial_data
         })
         
+        # Send a welcome toast notification to prove the system works
+        await websocket.send_json({
+            "type": "new_alert",
+            "data": {
+                "id": "welcome-test",
+                "type": "System Notification",
+                "message": "Notification system is fully active and connected!",
+                "level": "Info",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        })
+        
         while True:
             # Keep connection alive; wait for any message from client (optional)
             data = await websocket.receive_text()
@@ -66,7 +78,7 @@ async def get_simulated_state() -> dict:
     if db is None:
         return {"stations": [], "trains": [], "alerts": []}
         
-    stations = await db.stations.find({}).to_list(length=100)
+    stations = await db.stations.find({}).to_list(length=None)
     trains = await db.trains.find({}).to_list(length=50)
     
     # 1. Simulate Crowd Data for Stations
@@ -87,21 +99,22 @@ async def get_simulated_state() -> dict:
         waiting = random.randint(5, int(passengers * 0.3))
         
         percent = min(100, int((passengers / 1000) * 100))
-        if percent < 30:
+        if percent <= 40:
             level = "Green"
-        elif percent < 60:
+        elif percent <= 60:
             level = "Yellow"
-        elif percent < 85:
+        elif percent <= 80:
             level = "Orange"
         else:
             level = "Red"
             
         station_payloads.append({
             "station_id": str(s["_id"]),
-            "name": s["name"],
+            "name": s.get("station_name", s.get("name", "Unknown")),
             "line": s["line"],
             "latitude": s["latitude"],
             "longitude": s["longitude"],
+            "distance_from_start_km": s.get("distance_from_start_km", 0),
             "passenger_count": passengers,
             "crowd_level": level,
             "crowd_percentage": percent,
@@ -215,6 +228,13 @@ async def auto_generate_alerts(state: dict):
     if db is None:
         return
         
+    # Auto-resolve old alerts (older than 1 minute) to allow new ones to trigger
+    one_min_ago = datetime.utcnow() - __import__('datetime').timedelta(minutes=1)
+    await db.alerts.update_many(
+        {"status": "Active", "timestamp": {"$lt": one_min_ago}},
+        {"$set": {"status": "Resolved"}}
+    )
+        
     # Check Red Level stations and randomly trigger alerts (so it's not spamming every loop)
     red_stations = [s for s in state["stations"] if s["crowd_level"] == "Red"]
     for s in red_stations[:2]:
@@ -235,9 +255,15 @@ async def auto_generate_alerts(state: dict):
                     "timestamp": datetime.utcnow(),
                     "status": "Active"
                 }
-                await db.alerts.insert_one(alert_doc)
+                result = await db.alerts.insert_one(alert_doc)
+                alert_doc["id"] = str(result.inserted_id)
+                alert_doc.pop("_id", None)
+                alert_doc["timestamp"] = alert_doc["timestamp"].isoformat()
                 print(f"Automated Alert: Overcrowding at {s['name']}")
-                
+                await manager.broadcast({
+                    "type": "new_alert",
+                    "data": alert_doc
+                })
     # Check for random train delay simulations
     trains_active = [t for t in state["trains"] if t["status"] == "In Service"]
     if trains_active and random.random() < 0.05: # 5% chance to delay a train
@@ -259,5 +285,12 @@ async def auto_generate_alerts(state: dict):
                 "timestamp": datetime.utcnow(),
                 "status": "Active"
             }
-            await db.alerts.insert_one(alert_doc)
+            result = await db.alerts.insert_one(alert_doc)
+            alert_doc["id"] = str(result.inserted_id)
+            alert_doc.pop("_id", None)
+            alert_doc["timestamp"] = alert_doc["timestamp"].isoformat()
             print(f"Automated Alert: Delay for train {target_train['train_number']}")
+            await manager.broadcast({
+                "type": "new_alert",
+                "data": alert_doc
+            })

@@ -7,7 +7,7 @@ import { Train, Plus, Edit, Trash2, Search, SlidersHorizontal } from 'lucide-rea
 const TrainsPage = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
-  const isOperator = user?.role === 'Metro Operator';
+  const isOperator = user?.role === 'Operator' || user?.role === 'Metro Operator';
   const canModify = isAdmin || isOperator;
 
   const [trains, setTrains] = useState([]);
@@ -151,7 +151,7 @@ const TrainsPage = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">Train Fleet Registry</h1>
+          <h1 className="text-3xl font-black tracking-tight gradient-text">Train Fleet Registry</h1>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
             Database of rolling stock assets, passenger capacities, and service schedules.
           </p>
@@ -159,7 +159,7 @@ const TrainsPage = () => {
         {canModify && (
           <button
             onClick={handleOpenCreate}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white flex items-center gap-2 shadow-lg shadow-blue-500/15"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 font-bold text-xs text-white flex items-center gap-2 shadow-lg shadow-violet-500/25 transition-all duration-300 hover:shadow-violet-500/40"
           >
             <Plus size={16} />
             <span>Add Train</span>
@@ -177,10 +177,10 @@ const TrainsPage = () => {
               placeholder="Search train by number or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-900 border"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
             />
           </div>
-          <button type="submit" className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold">Search</button>
+          <button type="submit" className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-xs font-bold text-white transition-all duration-300">Search</button>
         </form>
 
         <div className="flex items-center gap-3 text-xs">
@@ -192,13 +192,13 @@ const TrainsPage = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border cursor-pointer font-semibold"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none cursor-pointer font-semibold transition-all duration-300 text-slate-800 dark:text-slate-200"
           >
-            <option value="">All Statuses</option>
-            <option value="In Service">In Service</option>
-            <option value="Standing By">Standing By</option>
-            <option value="Out of Service">Out of Service</option>
-            <option value="Maintenance">Maintenance</option>
+            <option className="dark:bg-slate-900" value="">All Statuses</option>
+            <option className="dark:bg-slate-900" value="In Service">In Service</option>
+            <option className="dark:bg-slate-900" value="Standing By">Standing By</option>
+            <option className="dark:bg-slate-900" value="Out of Service">Out of Service</option>
+            <option className="dark:bg-slate-900" value="Maintenance">Maintenance</option>
           </select>
         </div>
       </GlassmorphicCard>
@@ -212,9 +212,10 @@ const TrainsPage = () => {
         ) : (
           trains.map((t) => {
             const loadPct = Math.round((t.current_occupancy / t.capacity) * 100);
+            const cardGradient = t.status === 'In Service' ? 'emerald' : t.status === 'Standing By' ? 'cyan' : t.status === 'Maintenance' ? 'amber' : 'red';
             
             return (
-              <GlassmorphicCard key={t.id} className="space-y-4 flex flex-col justify-between h-full">
+              <GlassmorphicCard key={t.id} gradient={cardGradient} glow className="space-y-4 flex flex-col justify-between h-full hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="font-black text-lg flex items-center gap-2">
@@ -222,9 +223,9 @@ const TrainsPage = () => {
                       <span>{t.train_number}</span>
                     </h3>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      t.status === 'In Service' ? 'bg-green-500/10 text-green-500' :
-                      t.status === 'Standing By' ? 'bg-blue-500/10 text-blue-500' :
-                      t.status === 'Maintenance' ? 'bg-orange-500/10 text-orange-500' : 'bg-red-500/10 text-red-500'
+                      t.status === 'In Service' ? 'badge-gradient-emerald' :
+                      t.status === 'Standing By' ? 'badge-gradient-cyan' :
+                      t.status === 'Maintenance' ? 'badge-gradient-amber' : 'badge-gradient-red'
                     }`}>
                       {t.status}
                     </span>
@@ -246,15 +247,15 @@ const TrainsPage = () => {
                   </div>
                 </div>
 
-                <div className="space-y-3 border-t pt-3.5">
+                <div className="space-y-3 border-t border-slate-200 dark:border-white/10 pt-3.5">
                   <div className="flex justify-between text-xs font-semibold">
                     <span className="opacity-60">Occupancy load:</span>
                     <span>{t.current_occupancy} / {t.capacity} ({loadPct}%)</span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-white/5 h-2 rounded-full overflow-hidden">
                     <div 
-                      className={`h-full rounded-full ${
-                        loadPct > 85 ? 'bg-red-500' : loadPct > 60 ? 'bg-orange-500' : 'bg-green-500'
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        loadPct > 85 ? 'bg-gradient-to-r from-red-500 to-rose-500' : loadPct > 60 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
                       }`}
                       style={{ width: `${loadPct}%` }}
                     />
@@ -262,12 +263,12 @@ const TrainsPage = () => {
 
                   {canModify && (
                     <div className="flex justify-end gap-2 pt-2">
-                      <button onClick={() => handleOpenEdit(t)} className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:text-blue-500 transition-colors text-[10px] font-bold flex items-center gap-1">
+                      <button onClick={() => handleOpenEdit(t)} className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-violet-500/20 hover:text-violet-400 border border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-300 transition-all duration-300 text-[10px] font-bold flex items-center gap-1">
                         <Edit size={12} />
                         <span>Edit</span>
                       </button>
                       {isAdmin && (
-                        <button onClick={() => handleDelete(t.id)} className="px-3 py-1.5 rounded-lg bg-slate-250 dark:bg-slate-800 hover:text-red-500 transition-colors text-[10px] font-bold flex items-center gap-1">
+                        <button onClick={() => handleDelete(t.id)} className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-slate-200 dark:border-white/8 text-slate-600 dark:text-slate-300 transition-all duration-300 text-[10px] font-bold flex items-center gap-1">
                           <Trash2 size={12} />
                           <span>Delete</span>
                         </button>
@@ -283,9 +284,9 @@ const TrainsPage = () => {
 
       {/* Editor Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-lg">{isEditing ? 'Modify Train Record' : 'Register New Train'}</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="w-full max-w-md glass-card border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-2xl shadow-violet-500/10 space-y-4">
+            <h3 className="font-bold text-lg gradient-text">{isEditing ? 'Modify Train Record' : 'Register New Train'}</h3>
             
             <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold">
               <div className="grid grid-cols-2 gap-4">
@@ -298,7 +299,7 @@ const TrainsPage = () => {
                     placeholder="TR-RED-05"
                     value={formNumber}
                     onChange={(e) => setFormNumber(e.target.value.toUpperCase())}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border disabled:opacity-50"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none disabled:opacity-50 transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -309,7 +310,7 @@ const TrainsPage = () => {
                     placeholder="Red Speedster"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -320,9 +321,9 @@ const TrainsPage = () => {
                   <select
                     value={formRouteId}
                     onChange={(e) => setFormRouteId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none cursor-pointer transition-all duration-300 text-slate-800 dark:text-slate-200"
                   >
-                    {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    {routes.map(r => <option className="dark:bg-slate-900" key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -332,7 +333,7 @@ const TrainsPage = () => {
                     required
                     value={formCapacity}
                     onChange={(e) => setFormCapacity(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -344,7 +345,7 @@ const TrainsPage = () => {
                     type="number"
                     value={formOccupancy}
                     onChange={(e) => setFormOccupancy(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
                 <div>
@@ -354,7 +355,7 @@ const TrainsPage = () => {
                     placeholder="06:00"
                     value={formArrival}
                     onChange={(e) => setFormArrival(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
                 <div>
@@ -364,7 +365,7 @@ const TrainsPage = () => {
                     placeholder="23:00"
                     value={formDeparture}
                     onChange={(e) => setFormDeparture(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border"
+                    className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-all duration-300 text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -374,18 +375,18 @@ const TrainsPage = () => {
                 <select
                   value={formStatus}
                   onChange={(e) => setFormStatus(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer"
+                  className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none cursor-pointer transition-all duration-300"
                 >
-                  <option value="In Service">In Service</option>
-                  <option value="Standing By">Standing By</option>
-                  <option value="Out of Service">Out of Service</option>
-                  <option value="Maintenance">Maintenance</option>
+                  <option className="dark:bg-slate-900" value="In Service">In Service</option>
+                  <option className="dark:bg-slate-900" value="Standing By">Standing By</option>
+                  <option className="dark:bg-slate-900" value="Out of Service">Out of Service</option>
+                  <option className="dark:bg-slate-900" value="Maintenance">Maintenance</option>
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded bg-slate-200 dark:bg-slate-800">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-500">Save</button>
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/8 transition-all duration-300 text-slate-600 dark:text-slate-300">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold transition-all duration-300 shadow-lg shadow-violet-500/25">Save</button>
               </div>
             </form>
           </div>

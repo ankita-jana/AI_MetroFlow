@@ -5,145 +5,122 @@ import { AuthProvider } from './context/AuthContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { PrivateRoute, RoleRoute } from './components/PrivateRoute';
 import Layout from './components/Layout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import MetroMapPage from './pages/MetroMapPage';
-import CrowdMonitoring from './pages/CrowdMonitoring';
-import Scheduling from './pages/Scheduling';
-import AIPrediction from './pages/AIPrediction';
-import AnalyticsReports from './pages/AnalyticsReports';
-import StationsPage from './pages/StationsPage';
-import TrainsPage from './pages/TrainsPage';
-import AdminPanel from './pages/AdminPanel';
-import SettingsPage from './pages/SettingsPage';
-import AlertsPage from './pages/AlertsPage';
-import Unauthorized from './pages/Unauthorized';
-import NotFound from './pages/NotFound';
-import Profile from './pages/Profile';
-import LiveMonitoring from './pages/LiveMonitoring';
-import FrequencyAdjustment from './pages/FrequencyAdjustment';
-import CrowdPrediction from './pages/CrowdPrediction';
-import PassengerForecast from './pages/PassengerForecast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+// Lazy load pages for performance optimization
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const MetroMapPage = React.lazy(() => import('./pages/MetroMapPage'));
+const CrowdMonitoring = React.lazy(() => import('./pages/CrowdMonitoring'));
+const StationsPage = React.lazy(() => import('./pages/StationsPage'));
+const TrainsPage = React.lazy(() => import('./pages/TrainsPage'));
+const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const Unauthorized = React.lazy(() => import('./pages/Unauthorized'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const LiveMonitoring = React.lazy(() => import('./pages/LiveMonitoring'));
+const Scheduling = React.lazy(() => import('./pages/Scheduling'));
+const AIPrediction = React.lazy(() => import('./pages/AIPrediction'));
+const PassengerForecast = React.lazy(() => import('./pages/PassengerForecast'));
+const AnalyticsReports = React.lazy(() => import('./pages/AnalyticsReports'));
+const HeatmapDashboard = React.lazy(() => import('./pages/HeatmapDashboard'));
+const FrequencyAdjustment = React.lazy(() => import('./pages/FrequencyAdjustment'));
+const CrowdPrediction = React.lazy(() => import('./pages/CrowdPrediction'));
+const AlertsPage = React.lazy(() => import('./pages/AlertsPage'));
+const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
+
+
+const GOOGLE_CLIENT_ID = "251590210906-adre210t51c7g56uik1jflpknhd4s6re.apps.googleusercontent.com";
 
 function App() {
   return (
-    <ThemeProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <ThemeProvider>
       <AuthProvider>
         <WebSocketProvider>
           <Router>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
+            <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-950 text-white"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
 
-              {/* Private Shell Layout Routes */}
-              <Route 
-                path="/" 
-                element={
-                  <PrivateRoute>
-                    <Layout />
-                  </PrivateRoute>
-                }
-              >
-                {/* General Protected Pages */}
-                <Route index element={<Dashboard />} />
-                <Route path="map" element={<MetroMapPage />} />
-                <Route path="crowd" element={<CrowdMonitoring />} />
-                <Route path="alerts" element={<AlertsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="live-monitoring" element={<LiveMonitoring />} />
+                {/* Private Shell Layout Routes */}
+                <Route 
+                  path="/" 
+                  element={
+                    <PrivateRoute>
+                      <Layout />
+                    </PrivateRoute>
+                  }
+                >
+                  {/* General Protected Pages */}
+                  <Route index element={<Dashboard />} />
+                  <Route path="map" element={<MetroMapPage />} />
+                  <Route path="crowd" element={<CrowdMonitoring />} />
 
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="live-monitoring" element={<LiveMonitoring />} />
+                  <Route path="scheduling" element={<Scheduling />} />
+                  <Route path="ai-prediction" element={<AIPrediction />} />
+                  <Route path="passenger-forecast" element={<PassengerForecast />} />
+                  <Route path="analytics-reports" element={<AnalyticsReports />} />
+                  <Route path="heatmap" element={<HeatmapDashboard />} />
+                  <Route path="frequency-adjustment" element={<FrequencyAdjustment />} />
+                  <Route path="crowd-prediction" element={<CrowdPrediction />} />
+                  <Route path="alerts" element={<AlertsPage />} />
 
-                {/* Operations restricted pages (Admin & Operators) */}
-                <Route 
-                  path="scheduling" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Metro Operator']}>
-                      <Scheduling />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="frequency" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Metro Operator']}>
-                      <FrequencyAdjustment />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="stations" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Metro Operator']}>
-                      <StationsPage />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="trains" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Metro Operator']}>
-                      <TrainsPage />
-                    </RoleRoute>
-                  } 
-                />
+                  {/* Operations restricted pages (Admin & Operators) */}
+                  <Route 
+                    path="announcements" 
+                    element={
+                      <RoleRoute allowedRoles={['Admin']}>
+                        <AnnouncementsPage />
+                      </RoleRoute>
+                    } 
+                  />
+                  <Route 
+                    path="stations" 
+                    element={
+                      <RoleRoute allowedRoles={['Admin', 'Operator']}>
+                        <StationsPage />
+                      </RoleRoute>
+                    } 
+                  />
+                  <Route 
+                    path="trains" 
+                    element={
+                      <RoleRoute allowedRoles={['Admin', 'Operator']}>
+                        <TrainsPage />
+                      </RoleRoute>
+                    } 
+                  />
 
-                {/* Analytics restricted pages (Admin & Analysts) */}
-                <Route 
-                  path="predictions" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Analyst']}>
-                      <AIPrediction />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="predict-crowd" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Analyst']}>
-                      <CrowdPrediction />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="passenger-forecast" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Analyst']}>
-                      <PassengerForecast />
-                    </RoleRoute>
-                  } 
-                />
-                <Route 
-                  path="reports" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin', 'Analyst']}>
-                      <AnalyticsReports />
-                    </RoleRoute>
-                  } 
-                />
+                  {/* Admin Exclusive Panel */}
+                  <Route 
+                    path="admin" 
+                    element={
+                      <RoleRoute allowedRoles={['Admin']}>
+                        <AdminPanel />
+                      </RoleRoute>
+                    } 
+                  />
+                </Route>
 
-                {/* Admin Exclusive Panel */}
-                <Route 
-                  path="admin" 
-                  element={
-                    <RoleRoute allowedRoles={['Admin']}>
-                      <AdminPanel />
-                    </RoleRoute>
-                  } 
-                />
-              </Route>
-
-              {/* 404 Route */}
-              <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
+                {/* 404 Route */}
+                <Route path="/404" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
+              </Routes>
+            </React.Suspense>
           </Router>
         </WebSocketProvider>
       </AuthProvider>
     </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 }
 

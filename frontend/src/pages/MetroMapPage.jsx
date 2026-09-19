@@ -30,7 +30,7 @@ const MetroMapPage = () => {
     <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
       {/* Top Header */}
       <div>
-        <h1 className="text-3xl font-black tracking-tight">System Interactive Map</h1>
+        <h1 className="text-3xl font-black tracking-tight gradient-text">System Interactive Map</h1>
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           Live tracking of metro lines, stations crowd density, and rolling stock positions.
         </p>
@@ -47,22 +47,22 @@ const MetroMapPage = () => {
         <div className="flex flex-col h-full min-h-0">
           <GlassmorphicCard className="flex flex-col h-full min-h-0 space-y-4" hoverEffect={false}>
             {/* Tab Navigation */}
-            <div className="flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
+            <div className="flex p-1 bg-gradient-to-r from-violet-500/5 to-cyan-500/5 rounded-xl">
               <button 
                 onClick={() => setActiveTab('overview')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'overview' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'overview' ? 'bg-gradient-to-r from-violet-500/20 to-cyan-500/20 text-violet-500 dark:text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 Overview
               </button>
               <button 
                 onClick={() => setActiveTab('alerts')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${activeTab === 'alerts' ? 'bg-white dark:bg-slate-700 shadow-sm text-red-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${activeTab === 'alerts' ? 'bg-gradient-to-r from-violet-500/20 to-cyan-500/20 text-violet-500 dark:text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 Alerts {overcrowdedStations.length > 0 && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{overcrowdedStations.length}</span>}
               </button>
               <button 
                 onClick={() => setActiveTab('trains')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'trains' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'trains' ? 'bg-gradient-to-r from-violet-500/20 to-cyan-500/20 text-violet-500 dark:text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 Trains ({trains.length})
               </button>
@@ -79,20 +79,20 @@ const MetroMapPage = () => {
                     <span>Map Overview</span>
                   </h3>
                   <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
-                    <div className="p-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-xl space-y-1">
-                      <span className="opacity-60 flex items-center gap-1"><MapPin size={10} />Real Stations</span>
+                    <div className="p-3 bg-gradient-to-br from-violet-500/10 to-purple-500/5 rounded-xl space-y-1">
+                      <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={10} />Real Stations</span>
                       <p className="text-lg font-black">{networkCount.stations}</p>
                     </div>
-                    <div className="p-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-xl space-y-1">
-                      <span className="opacity-60">Metro Lines</span>
+                    <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-xl space-y-1">
+                      <span className="text-slate-500 dark:text-slate-400">Metro Lines</span>
                       <p className="text-lg font-black text-purple-500">{networkCount.lines}</p>
                     </div>
-                    <div className="p-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-xl space-y-1">
-                      <span className="opacity-60">Active Trains</span>
+                    <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-xl space-y-1">
+                      <span className="text-slate-500 dark:text-slate-400">Active Trains</span>
                       <p className="text-lg font-black text-blue-500">{activeTrainsCount}</p>
                     </div>
-                    <div className="p-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-xl space-y-1">
-                      <span className="opacity-60">Live Stations</span>
+                    <div className="p-3 bg-gradient-to-br from-amber-500/10 to-orange-500/5 rounded-xl space-y-1">
+                      <span className="text-slate-500 dark:text-slate-400">Live Stations</span>
                       <p className="text-lg font-black text-green-500">{stations.length}</p>
                     </div>
                   </div>
@@ -116,15 +116,15 @@ const MetroMapPage = () => {
                       overcrowdedStations.map((station) => (
                         <div 
                           key={station.station_id} 
-                          className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center justify-between text-xs transition-all hover:scale-[1.02]"
+                          className="p-3 rounded-xl border border-red-500/20 border-l-2 border-l-red-500 bg-red-500/5 flex items-center justify-between text-xs transition-all hover:scale-[1.02]"
                         >
                           <div>
-                            <h4 className="font-bold text-red-200">{station.name}</h4>
-                            <p className="opacity-65 text-[10px] mt-0.5">{station.line}</p>
+                            <h4 className="font-bold text-red-700 dark:text-red-200">{station.name}</h4>
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] mt-0.5">{station.line}</p>
                           </div>
                           <div className="text-right font-bold">
-                            <p className="text-red-400">{station.passenger_count} pax</p>
-                            <p className="text-[10px] opacity-60">{station.crowd_percentage}% cap</p>
+                            <p className="text-red-600 dark:text-red-400">{station.passenger_count} pax</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{station.crowd_percentage}% cap</p>
                           </div>
                         </div>
                       ))
@@ -150,25 +150,25 @@ const MetroMapPage = () => {
                       trains.map((train) => (
                         <div 
                           key={train.train_id} 
-                          className="p-3 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-200/20 dark:bg-slate-800/20 flex flex-col gap-1.5 text-xs transition-all hover:scale-[1.02]"
+                           className="p-3 rounded-xl border border-[var(--border)] bg-slate-200/20 dark:bg-slate-800/20 flex flex-col gap-1.5 text-xs transition-all hover:scale-[1.02]"
                         >
                           <div className="flex justify-between items-center">
                             <h4 className="font-bold">{train.train_number}</h4>
                             <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
                               train.crowd_level === 'Red'
-                                ? 'bg-red-500/10 text-red-500'
+                                ? 'badge-gradient-red'
                                 : train.crowd_level === 'Orange'
-                                ? 'bg-orange-500/10 text-orange-500'
+                                ? 'badge-gradient-amber'
                                 : train.crowd_level === 'Yellow'
-                                ? 'bg-yellow-500/10 text-yellow-500'
-                                : 'bg-green-500/10 text-green-500'
+                                ? 'badge-gradient-amber'
+                                : 'badge-gradient-emerald'
                             }`}>
                               {train.crowd_level}
                             </span>
                           </div>
-                          <div className="flex justify-between text-[10px] opacity-75">
+                          <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
                             <span>{train.train_name}</span>
-                            <span>At: <b>{train.current_station}</b></span>
+                            <span>At: <b className="text-slate-800 dark:text-white">{train.current_station}</b></span>
                           </div>
                         </div>
                       ))

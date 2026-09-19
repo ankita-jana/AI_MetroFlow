@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/stations", tags=["Stations"])
 
 # Access control lists
 admin_only = RoleChecker(["Admin"])
-staff_only = RoleChecker(["Admin", "Metro Operator"])
+staff_only = RoleChecker(["Admin", "Operator"])
 
 # ─── Network map CSV cache ────────────────────────────────────────────────────
 _NETWORK_MAP_CACHE = None
@@ -68,12 +68,32 @@ def _load_network_map():
 @router.get("/network-map")
 async def get_network_map():
     """
-    Return all real Delhi Metro station coordinates from Delhi-Metro-Network.csv.
+    Return all real Delhi Metro station coordinates from MongoDB.
     No authentication required — public map data.
     Used by LeafletMap to render accurate real-coordinate station markers.
     """
-    stations = _load_network_map()
-    return {"stations": stations, "count": len(stations)}
+    db = db_instance.db
+    if db is None:
+        return {"stations": [], "count": 0}
+        
+    stations = await db.stations.find({}).to_list(length=None)
+    
+    mapped_stations = []
+    for s in stations:
+        mapped_stations.append({
+            "id": str(s["_id"]),
+            "name": s["name"],
+            "full_name": s.get("full_name", s["name"]),
+            "line": s["line"],
+            "line_color": s.get("line_color", "#6366f1"),
+            "latitude": s["latitude"],
+            "longitude": s["longitude"],
+            "distance_from_start_km": s.get("distance_from_start_km", 0),
+            "station_layout": s.get("station_layout", "Unknown"),
+            "opening_date": s.get("opening_date", "")
+        })
+        
+    return {"stations": mapped_stations, "count": len(mapped_stations)}
 
 
 

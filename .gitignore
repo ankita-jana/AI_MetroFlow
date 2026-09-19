@@ -5,6 +5,7 @@
 .env.test.local
 .env.production.local
 *.env
+!.env.example
 
 # Dependencies
 **/node_modules/
@@ -39,6 +40,7 @@ venv/
 **/*.ind
 **/*.map
 **/*.tab
+
 datasets/TFL Entry and Exit Data/Geodata/statistical-gis-boundaries-london/
 datasets/TFL Entry and Exit Data/Tube maps/
 

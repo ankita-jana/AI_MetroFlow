@@ -19,6 +19,7 @@ metrics_data = {}
 demand_model = None
 delay_classifier = None
 delay_regressor = None
+anomaly_model = None
 
 try:
     if os.path.exists(os.path.join(MODELS_DIR, "metrics.json")):
@@ -33,6 +34,10 @@ try:
         
     if os.path.exists(os.path.join(MODELS_DIR, "delay_regressor.pkl")):
         delay_regressor = joblib.load(os.path.join(MODELS_DIR, "delay_regressor.pkl"))
+        
+    if os.path.exists(os.path.join(MODELS_DIR, "anomaly_model.pkl")):
+        anomaly_model = joblib.load(os.path.join(MODELS_DIR, "anomaly_model.pkl"))
+        
         print("AI Models and encoders loaded successfully in FastAPI.")
 except Exception as e:
     print(f"Warning: Failed to load ML models: {e}. Fallback to simulated prediction is active.")
@@ -55,6 +60,9 @@ class DemandPredictionRequest(BaseModel):
     month: int = Field(1, ge=1, le=12)
     is_weekend: bool = False
     remarks: str = Field("normal", description="peak, off-peak, festival, weekend, maintenance, normal")
+
+class AnomalyPredictionRequest(DemandPredictionRequest):
+    passengers: int = Field(..., description="Observed passenger count to evaluate for anomaly", ge=0)
 
 class DelayPredictionRequest(BaseModel):
     temperature_C: float = Field(25.0)
@@ -149,6 +157,48 @@ async def predict_demand(req: DemandPredictionRequest, current_user: dict = Depe
         "crowd_percentage": percent,
         "crowd_level": level,
         "timestamp": datetime.utcnow()
+    }
+
+@router.post("/anomaly")
+async def detect_anomaly(req: AnomalyPredictionRequest, current_user: dict = Depends(analyst_only)):
+    if not anomaly_model or not metrics_data:
+        # Fallback simulated response
+        is_anomaly = req.passengers > 5000 or req.passengers < 50
+        return {
+            "is_anomaly": is_anomaly,
+            "anomaly_score": -0.5 if is_anomaly else 0.5,
+            "threshold": 0.0,
+            "message": "Anomaly detected in traffic volume!" if is_anomaly else "Traffic volume is normal."
+        }
+        
+    station_map = metrics_data["mappings"]["stations"]
+    remarks_map = metrics_data["mappings"]["remarks"]
+    
+    from_code = station_map.get(req.from_station, 0)
+    to_code = station_map.get(req.to_station, 0)
+    rem_code = remarks_map.get(req.remarks.lower(), 0)
+    
+    input_df = pd.DataFrame([{
+        "From_Station_Code": from_code,
+        "To_Station_Code": to_code,
+        "Distance_km": req.distance_km,
+        "DayOfWeek": req.day_of_week,
+        "Month": req.month,
+        "IsWeekend": 1 if req.is_weekend else 0,
+        "Remarks_Code": rem_code,
+        "Passengers": req.passengers
+    }])
+    
+    score = anomaly_model.decision_function(input_df)[0]
+    # Prediction: -1 for outliers, 1 for inliers. 
+    # But let's use the score. Negative score = Anomaly.
+    is_anomaly = score < 0
+    
+    return {
+        "is_anomaly": bool(is_anomaly),
+        "anomaly_score": float(score),
+        "threshold": 0.0,
+        "message": "High alert: Severe anomaly detected in passenger flow!" if is_anomaly else "Passenger flow is within normal statistical bounds."
     }
 
 @router.post("/delay")

@@ -35,7 +35,7 @@ async def init_db():
     print("Initializing Database Indexes...")
     # Create indexes
     await db.users.create_index("email", unique=True)
-    await db.stations.create_index("station_code", unique=True)
+    await db.stations.create_index("station_code", unique=True, sparse=True)
     await db.stations.create_index([("latitude", 1), ("longitude", 1)])
     await db.trains.create_index("train_number", unique=True)
     await db.routes.create_index("name", unique=True)
@@ -46,6 +46,9 @@ async def init_db():
     await db.passenger_history.create_index([("station_id", 1), ("timestamp", -1)])
     await db.traffic_reports.create_index("created_at")
     await db.train_status.create_index([("train_id", 1), ("timestamp", -1)])
+    await db.notifications.create_index([("user_id", 1), ("timestamp", -1)])
+    await db.announcements.create_index([("expiry_date", 1)])
+    await db.heatmap_data.create_index([("timestamp", -1)])
     
     # Seed default users
     user_count = await db.users.count_documents({})
@@ -94,7 +97,9 @@ async def init_db():
                 try:
                     s_id = row.get("Station ID", str(idx + 1)).strip()
                     name = row.get("Station Name", "").strip()
-                    dist = float(row.get("Distance from Start (km)", 0.0))
+                    dist = float(row.get("Distance from Start (km)", 0.0) or 0.0)
+
+
                     line = row.get("Line", "").strip()
                     layout = row.get("Station Layout", "Elevated").strip()
                     lat = float(row.get("Latitude", 0.0))

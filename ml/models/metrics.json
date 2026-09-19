@@ -1,7 +1,7 @@
 {
     "demand_model": {
         "mae": 3.548990385672062,
-        "rmse": 4.472579194031648,
+        "rmse": 4.472579194031649,
         "feature_importance": {
             "From_Station_Code": 0.17890365036854194,
             "To_Station_Code": 0.17098440637901535,
@@ -11,6 +11,11 @@
             "IsWeekend": 0.008966798954978957,
             "Remarks_Code": 0.08705251344844107
         }
+    },
+    "anomaly_model": {
+        "contamination": 0.05,
+        "mean_decision_score": 0.06703648721029752,
+        "std_decision_score": 0.03815965222104172
     },
     "delay_model": {
         "accuracy": 0.696969696969697,

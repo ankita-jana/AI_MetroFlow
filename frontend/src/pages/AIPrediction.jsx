@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import GlassmorphicCard from '../components/GlassmorphicCard';
-import { Brain, Sparkles, TrendingUp, Info, HelpCircle, Activity } from 'lucide-react';
+import { Brain, Sparkles, TrendingUp, Info, HelpCircle, Activity, AlertTriangle } from 'lucide-react';
 
 const AIPrediction = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('demand'); // demand or delay
+  const [activeTab, setActiveTab] = useState('demand'); // demand, delay, anomaly
 
   // Demand query form state
   const [demFrom, setDemFrom] = useState('Rajiv Chowk');
@@ -17,6 +17,10 @@ const AIPrediction = () => {
   const [demWeekend, setDemWeekend] = useState(false);
   const [demRemarks, setDemRemarks] = useState('peak');
   const [demResult, setDemResult] = useState(null);
+
+  // Anomaly query form state
+  const [anoPassengers, setAnoPassengers] = useState(15000);
+  const [anoResult, setAnoResult] = useState(null);
 
   // Delay query form state
   const [delTemp, setDelTemp] = useState(32.0);
@@ -68,6 +72,28 @@ const AIPrediction = () => {
     }
   };
 
+  const handlePredictAnomaly = async (e) => {
+    e.preventDefault();
+    setPredLoading(true);
+    try {
+      const response = await api.post('/predictions/anomaly', {
+        from_station: demFrom,
+        to_station: demTo,
+        distance_km: parseFloat(demDist),
+        day_of_week: parseInt(demDay),
+        month: parseInt(demMonth),
+        is_weekend: demWeekend,
+        remarks: demRemarks,
+        passengers: parseInt(anoPassengers)
+      });
+      setAnoResult(response.data);
+    } catch (err) {
+      alert('Failed to calculate anomaly detection.');
+    } finally {
+      setPredLoading(false);
+    }
+  };
+
   const handlePredictDelay = async (e) => {
     e.preventDefault();
     setPredLoading(true);
@@ -111,7 +137,7 @@ const AIPrediction = () => {
       </div>
 
       {/* Model Performance Diagnostics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Demand Model Stats */}
         <GlassmorphicCard className="space-y-4" hoverEffect={false}>
@@ -216,27 +242,57 @@ const AIPrediction = () => {
           </div>
         </GlassmorphicCard>
 
+        {/* Anomaly Model Stats */}
+        <GlassmorphicCard className="space-y-4" hoverEffect={false} gradient="rose" glow>
+          <h3 className="font-bold text-base border-b pb-2 flex items-center justify-between">
+            <span>Anomaly Detection Diagnostics</span>
+            <span className="text-xs badge-gradient-rose px-2 py-0.5 rounded font-black uppercase">Isolation Forest</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
+            <div className="p-3 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl space-y-1">
+              <span className="opacity-60 dark:opacity-100">Contamination Rate</span>
+              <p className="text-lg font-black text-rose-500">{(metrics?.anomaly_model?.contamination * 100 || 5).toFixed(1)}%</p>
+            </div>
+            <div className="p-3 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl space-y-1">
+              <span className="opacity-60 dark:opacity-100">Mean Score</span>
+              <p className="text-lg font-black">{metrics?.anomaly_model?.mean_decision_score?.toFixed(3) || '0.067'}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3 pt-2">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-slate-300">How it works</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              The Isolation Forest isolates observations by randomly selecting a feature and then randomly selecting a split value. 
+              Highly unusual flow surges (like a sudden protest or system failure) require fewer splits to isolate, resulting in a negative anomaly score.
+            </p>
+          </div>
+        </GlassmorphicCard>
       </div>
 
       {/* Interactive Predictors */}
       <GlassmorphicCard className="space-y-6" hoverEffect={false}>
         {/* Toggle tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800">
+        <div className="flex gap-4 border-b border-slate-300 dark:border-slate-800 pb-2">
           <button 
             onClick={() => setActiveTab('demand')}
-            className={`pb-3 px-6 text-sm font-extrabold transition-all border-b-2 ${
-              activeTab === 'demand' ? 'border-blue-600 text-blue-500' : 'border-transparent text-slate-500'
-            }`}
+            className={`pb-2 px-2 font-bold text-sm transition-colors relative ${activeTab === 'demand' ? 'text-blue-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
-            Predict Passenger Demand Flow
+            Passenger Demand Prediction
+            {activeTab === 'demand' && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-blue-500 rounded-full" />}
           </button>
           <button 
             onClick={() => setActiveTab('delay')}
-            className={`pb-3 px-6 text-sm font-extrabold transition-all border-b-2 ${
-              activeTab === 'delay' ? 'border-blue-600 text-blue-500' : 'border-transparent text-slate-500'
-            }`}
+            className={`pb-2 px-2 font-bold text-sm transition-colors relative ${activeTab === 'delay' ? 'text-amber-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
-            Predict Train Delay Risks
+            System Delay Risk
+            {activeTab === 'delay' && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-amber-500 rounded-full" />}
+          </button>
+          <button 
+            onClick={() => setActiveTab('anomaly')}
+            className={`pb-2 px-2 font-bold text-sm transition-colors relative ${activeTab === 'anomaly' ? 'text-rose-500' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+          >
+            Anomaly Detection
+            {activeTab === 'anomaly' && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-rose-500 rounded-full" />}
           </button>
         </div>
 
@@ -264,13 +320,13 @@ const AIPrediction = () => {
                 <div className="space-y-1">
                   <label className="text-slate-500">Day of Week</label>
                   <select value={demDay} onChange={e=>setDemDay(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    {weekdaysList.map((day, idx) => <option key={idx} value={idx}>{day}</option>)}
+                    {weekdaysList.map((day, idx) => <option className="dark:bg-slate-900" key={idx} value={idx}>{day}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-500">Month</label>
                   <select value={demMonth} onChange={e=>setDemMonth(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    {monthsList.map((month, idx) => <option key={idx} value={idx+1}>{month}</option>)}
+                    {monthsList.map((month, idx) => <option className="dark:bg-slate-900" key={idx} value={idx+1}>{month}</option>)}
                   </select>
                 </div>
               </div>
@@ -278,11 +334,11 @@ const AIPrediction = () => {
                 <div className="space-y-1">
                   <label className="text-slate-500">Remarks / Period</label>
                   <select value={demRemarks} onChange={e=>setDemRemarks(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    <option value="normal">Normal / Off-Peak</option>
-                    <option value="peak">Office Rush Hour (Peak)</option>
-                    <option value="weekend">Weekend Services</option>
-                    <option value="festival">Festival Peak Traffic</option>
-                    <option value="maintenance">Maintenance Work Warning</option>
+                    <option className="dark:bg-slate-900" value="normal">Normal / Off-Peak</option>
+                    <option className="dark:bg-slate-900" value="peak">Office Rush Hour (Peak)</option>
+                    <option className="dark:bg-slate-900" value="weekend">Weekend Services</option>
+                    <option className="dark:bg-slate-900" value="festival">Festival Peak Traffic</option>
+                    <option className="dark:bg-slate-900" value="maintenance">Maintenance Work Warning</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-2 pt-6">
@@ -299,7 +355,7 @@ const AIPrediction = () => {
                 <span>Calculate Demand</span>
               </button>
             </form>
-          ) : (
+          ) : activeTab === 'delay' ? (
             <form onSubmit={handlePredictDelay} className="space-y-4 text-xs font-semibold">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
@@ -327,7 +383,7 @@ const AIPrediction = () => {
                 <div className="space-y-1">
                   <label className="text-slate-500">Weekday</label>
                   <select value={delWeekday} onChange={e=>setDelWeekday(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    {weekdaysList.map((day, idx) => <option key={idx} value={idx}>{day}</option>)}
+                    {weekdaysList.map((day, idx) => <option className="dark:bg-slate-900" key={idx} value={idx}>{day}</option>)}
                   </select>
                 </div>
               </div>
@@ -335,22 +391,22 @@ const AIPrediction = () => {
                 <div className="space-y-1">
                   <label className="text-slate-500">Weather Condition</label>
                   <select value={delWeather} onChange={e=>setDelWeather(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    <option value="Clear">Clear / Dry</option>
-                    <option value="Rain">Heavy Monsoon Rain</option>
-                    <option value="Fog">Winter Smog / Fog</option>
-                    <option value="Storm">Thunderstorm</option>
-                    <option value="Cloudy">Overcast / Cloudy</option>
+                    <option className="dark:bg-slate-900" value="Clear">Clear / Dry</option>
+                    <option className="dark:bg-slate-900" value="Rain">Heavy Monsoon Rain</option>
+                    <option className="dark:bg-slate-900" value="Fog">Winter Smog / Fog</option>
+                    <option className="dark:bg-slate-900" value="Storm">Thunderstorm</option>
+                    <option className="dark:bg-slate-900" value="Cloudy">Overcast / Cloudy</option>
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-slate-500">Local Public Event</label>
                   <select value={delEvent} onChange={e=>setDelEvent(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
-                    <option value="None">None</option>
-                    <option value="Sports">IPL Cricket Match</option>
-                    <option value="Festival">Diwali / Holiday Event</option>
-                    <option value="Concert">Music Concert</option>
-                    <option value="Parade">Republic Day Parade</option>
-                    <option value="Protest">Public Protest Rally</option>
+                    <option className="dark:bg-slate-900" value="None">None</option>
+                    <option className="dark:bg-slate-900" value="Sports">IPL Cricket Match</option>
+                    <option className="dark:bg-slate-900" value="Festival">Diwali / Holiday Event</option>
+                    <option className="dark:bg-slate-900" value="Concert">Music Concert</option>
+                    <option className="dark:bg-slate-900" value="Parade">Republic Day Parade</option>
+                    <option className="dark:bg-slate-900" value="Protest">Public Protest Rally</option>
                   </select>
                 </div>
               </div>
@@ -371,6 +427,65 @@ const AIPrediction = () => {
               >
                 <Sparkles size={16} />
                 <span>Calculate Delay Risk</span>
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handlePredictAnomaly} className="space-y-4 text-xs font-semibold">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-500">From Station</label>
+                  <input type="text" value={demFrom} onChange={e=>setDemFrom(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-500">To Station</label>
+                  <input type="text" value={demTo} onChange={e=>setDemTo(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-slate-500">Distance (km)</label>
+                  <input type="number" step="0.1" value={demDist} onChange={e=>setDemDist(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-500">Day of Week</label>
+                  <select value={demDay} onChange={e=>setDemDay(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
+                    {weekdaysList.map((day, idx) => <option className="dark:bg-slate-900" key={idx} value={idx}>{day}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-500">Month</label>
+                  <select value={demMonth} onChange={e=>setDemMonth(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
+                    {monthsList.map((month, idx) => <option className="dark:bg-slate-900" key={idx} value={idx+1}>{month}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1">
+                  <label className="text-slate-500">Remarks / Period</label>
+                  <select value={demRemarks} onChange={e=>setDemRemarks(e.target.value)} className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border cursor-pointer">
+                    <option className="dark:bg-slate-900" value="normal">Normal / Off-Peak</option>
+                    <option className="dark:bg-slate-900" value="peak">Office Rush Hour (Peak)</option>
+                    <option className="dark:bg-slate-900" value="weekend">Weekend Services</option>
+                    <option className="dark:bg-slate-900" value="festival">Festival Peak Traffic</option>
+                    <option className="dark:bg-slate-900" value="maintenance">Maintenance Work Warning</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-rose-500 font-bold">Observed Passengers</label>
+                  <input type="number" value={anoPassengers} onChange={e=>setAnoPassengers(e.target.value)} className="w-full p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-800 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 text-rose-600 dark:text-rose-400 font-black" required min="0" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="anoWeekendCheck" checked={demWeekend} onChange={e=>setDemWeekend(e.target.checked)} className="w-4 h-4 cursor-pointer accent-rose-500" />
+                <label htmlFor="anoWeekendCheck" className="cursor-pointer dark:text-slate-200">Is Weekend Holiday</label>
+              </div>
+              <button 
+                type="submit" 
+                disabled={predLoading}
+                className="py-3 px-6 rounded-xl bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 text-white font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-4 w-full"
+              >
+                <AlertTriangle size={16} />
+                <span>Evaluate Anomaly Risk</span>
               </button>
             </form>
           )}
@@ -457,6 +572,35 @@ const AIPrediction = () => {
                       ) : (
                         <span className="text-[10px] font-black uppercase text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">Dispatch on schedule</span>
                       )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : activeTab === 'anomaly' && anoResult ? (
+              <div className={`p-6 rounded-2xl border space-y-4 animate-in fade-in zoom-in-95 duration-200 ${anoResult.is_anomaly ? 'bg-rose-500/5 border-rose-500/20' : 'bg-emerald-500/5 border-emerald-500/20'}`}>
+                <div className={`flex justify-between items-center pb-2 border-b ${anoResult.is_anomaly ? 'border-rose-500/10' : 'border-emerald-500/10'}`}>
+                  <h4 className={`font-extrabold text-sm uppercase tracking-wider flex items-center gap-1.5 ${anoResult.is_anomaly ? 'text-rose-500' : 'text-emerald-500'}`}>
+                    <AlertTriangle size={16} />
+                    <span>Inference Result</span>
+                  </h4>
+                  <span className="text-[10px] opacity-60">Computed just now</span>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs font-semibold opacity-75">Status:</span>
+                    <p className={`text-3xl font-black ${anoResult.is_anomaly ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      {anoResult.is_anomaly ? 'ANOMALY DETECTED' : 'NORMAL FLOW'}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-xs font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {anoResult.message}
+                    </p>
+                    <div className="flex justify-between font-bold pt-2">
+                      <span className="text-slate-500">Isolation Score:</span>
+                      <span className={anoResult.is_anomaly ? 'text-rose-500' : 'text-emerald-500'}>{anoResult.anomaly_score.toFixed(4)}</span>
                     </div>
                   </div>
                 </div>

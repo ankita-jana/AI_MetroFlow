@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 from backend.database import db_instance
 from backend.auth import RoleChecker
 from backend.models.schedule import ScheduleCreate, ScheduleUpdate, ScheduleResponse, OptimizeFrequencyRequest
+from backend.routers.crowd import manager
 
 router = APIRouter(prefix="/api/schedules", tags=["Schedules"])
 
 admin_only = RoleChecker(["Admin"])
-staff_only = RoleChecker(["Admin", "Metro Operator"])
+staff_only = RoleChecker(["Admin", "Operator", "Analyst"])
 
 @router.get("", response_model=dict)
 async def list_schedules(
@@ -215,6 +216,13 @@ async def update_schedule(schedule_id: str, sched_in: ScheduleUpdate, current_us
     updated["train_id"] = str(updated["train_id"])
     updated["route_id"] = str(updated["route_id"])
     updated["station_id"] = str(updated["station_id"])
+    
+    # Broadcast schedule update
+    await manager.broadcast({
+        "type": "schedule_update",
+        "data": updated
+    })
+    
     return updated
 
 @router.delete("/{schedule_id}")

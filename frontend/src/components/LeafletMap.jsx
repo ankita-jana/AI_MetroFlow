@@ -181,7 +181,7 @@ const LeafletMap = ({ stationsData = [], trainsData = [] }) => {
           className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg border transition-all ${
             showNetworkLayer
               ? 'bg-slate-900 border-slate-600 text-white'
-              : 'bg-white border-slate-300 text-slate-700'
+              : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200'
           }`}
         >
           {showNetworkLayer ? '🗺 Network ON' : '🗺 Network OFF'}
@@ -255,7 +255,6 @@ const LeafletMap = ({ stationsData = [], trainsData = [] }) => {
         {/* ── Live WebSocket Station Overlay (crowd data) ── */}
         {stationsData.length > 0 && (
           <LayerGroup>
-            {renderLivePolylines()}
             {stationsData.map(station => (
               <Marker
                 key={`live-${station.station_id || station.id}`}
@@ -280,19 +279,19 @@ const LeafletMap = ({ stationsData = [], trainsData = [] }) => {
                     </p>
                     <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t text-[11px] font-semibold">
                       <div>
-                        <p className="opacity-65">Riders</p>
+                        <p className="opacity-65 dark:opacity-100">Riders</p>
                         <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{station.passenger_count}</p>
                       </div>
                       <div>
-                        <p className="opacity-65">Density</p>
+                        <p className="opacity-65 dark:opacity-100">Density</p>
                         <p className="text-sm font-bold">{station.crowd_percentage}%</p>
                       </div>
                       <div>
-                        <p className="opacity-65">Inflow</p>
+                        <p className="opacity-65 dark:opacity-100">Inflow</p>
                         <p className="text-green-500 font-bold">+{station.inflow}</p>
                       </div>
                       <div>
-                        <p className="opacity-65">Outflow</p>
+                        <p className="opacity-65 dark:opacity-100">Outflow</p>
                         <p className="text-red-500 font-bold">-{station.outflow}</p>
                       </div>
                     </div>

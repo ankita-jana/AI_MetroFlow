@@ -12,7 +12,12 @@ import {
   Building2, 
   Settings, 
   ShieldAlert,
-  LogOut
+  LogOut,
+  Activity,
+  TrendingUp,
+  Sliders,
+  BellRing,
+  Megaphone
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, closeMenu }) => {
@@ -21,17 +26,25 @@ const Sidebar = ({ isOpen, closeMenu }) => {
   const userRole = user?.role || 'Guest';
 
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['Admin', 'Metro Operator', 'Analyst'] },
-    { name: 'Metro Map', path: '/map', icon: Map, roles: ['Admin', 'Metro Operator', 'Analyst'] },
-    { name: 'Crowd Monitoring', path: '/crowd', icon: Users, roles: ['Admin', 'Metro Operator', 'Analyst'] },
-    { name: 'Scheduling', path: '/scheduling', icon: CalendarDays, roles: ['Admin', 'Metro Operator'] },
-    { name: 'AI Predictions', path: '/predictions', icon: BrainCircuit, roles: ['Admin', 'Analyst'] },
-    { name: 'Analytics Reports', path: '/reports', icon: FileSpreadsheet, roles: ['Admin', 'Analyst'] },
-    { name: 'Stations', path: '/stations', icon: Building2, roles: ['Admin', 'Metro Operator'] },
-    { name: 'Trains', path: '/trains', icon: Train, roles: ['Admin', 'Metro Operator'] },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['Admin', 'Operator', 'Analyst'] },
+    { name: 'Metro Map', path: '/map', icon: Map, roles: ['Admin', 'Operator', 'Analyst'] },
+    { name: 'Crowd Monitoring', path: '/crowd', icon: Users, roles: ['Admin', 'Operator', 'Analyst'] },
+
+    { name: 'Live Monitoring', path: '/live-monitoring', icon: Activity, roles: ['Admin', 'Operator', 'Analyst'] },
+    { name: 'Scheduling', path: '/scheduling', icon: CalendarDays, roles: ['Admin', 'Operator'] },
+    { name: 'Frequency Adjustment', path: '/frequency-adjustment', icon: Sliders, roles: ['Admin', 'Operator'] },
+    { name: 'AI Prediction', path: '/ai-prediction', icon: BrainCircuit, roles: ['Admin', 'Analyst'] },
+    { name: 'Passenger Forecast', path: '/passenger-forecast', icon: TrendingUp, roles: ['Admin', 'Analyst'] },
+    { name: 'Analytics Reports', path: '/analytics-reports', icon: FileSpreadsheet, roles: ['Admin', 'Analyst'] },
+    { name: 'Congestion Heatmap', path: '/heatmap', icon: Map, roles: ['Admin', 'Analyst'] },
+
+    { name: 'System Alerts', path: '/alerts', icon: BellRing, roles: ['Admin', 'Operator', 'Analyst'] },
+    { name: 'Stations', path: '/stations', icon: Building2, roles: ['Admin', 'Operator'] },
+    { name: 'Trains', path: '/trains', icon: Train, roles: ['Admin', 'Operator'] },
+    { name: 'Announcements', path: '/announcements', icon: Megaphone, roles: ['Admin'] },
     { name: 'Admin Panel', path: '/admin', icon: ShieldAlert, roles: ['Admin'] },
 
-    { name: 'Settings', path: '/settings', icon: Settings, roles: ['Admin', 'Metro Operator', 'Analyst'] },
+    { name: 'Settings', path: '/settings', icon: Settings, roles: ['Admin', 'Operator', 'Analyst'] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.roles.includes(userRole));
@@ -48,20 +61,21 @@ const Sidebar = ({ isOpen, closeMenu }) => {
 
       {/* Sidebar Container */}
       <aside 
-        className={`fixed inset-y-0 left-0 w-64 bg-[var(--card)] border-r border-[var(--border)] z-50 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white/20 dark:bg-black/20 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 z-50 transform transition-colors transition-transform duration-300 ease-in-out md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } flex flex-col h-screen`}
       >
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/20 text-white font-extrabold text-xl">
+      <div className="h-16 px-6 border-b border-slate-200 dark:border-white/10 flex items-center gap-3 relative shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 via-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30 text-white font-extrabold text-lg relative shrink-0">
           MF
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-violet-600 via-purple-500 to-cyan-500 blur-lg opacity-40"></div>
         </div>
-        <div>
-          <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-violet-500 to-cyan-400 bg-clip-text text-transparent">
+        <div className="flex flex-col justify-center">
+          <h1 className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white leading-tight">
             MetroFlow
           </h1>
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+          <p className="text-[10px] font-bold text-violet-600 dark:text-cyan-400 uppercase tracking-widest leading-tight">
             AI Platform
           </p>
         </div>
@@ -76,10 +90,10 @@ const Sidebar = ({ isOpen, closeMenu }) => {
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 relative ${
                   isActive
-                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/20'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/40 hover:text-violet-500 dark:hover:text-cyan-400'
+                    ? 'bg-gradient-to-r from-violet-600/90 via-purple-600/90 to-indigo-600/90 text-white shadow-lg shadow-violet-500/25'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-cyan-500/10 hover:text-violet-600 dark:hover:text-white hover:shadow-md hover:shadow-violet-500/5'
                 }`
               }
             >
@@ -90,15 +104,18 @@ const Sidebar = ({ isOpen, closeMenu }) => {
         })}
       </nav>
 
+      {/* Gradient Divider */}
+      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/20 to-transparent"></div>
+
       {/* User Footer Profile */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
-        <Link to="/profile" className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/40 transition-all cursor-pointer">
-          <div className="w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 shrink-0">
+      <div className="p-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-3">
+        <Link to="/profile" className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-gradient-to-r hover:from-violet-500/10 hover:to-cyan-500/10 transition-all cursor-pointer">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-cyan-500 flex items-center justify-center font-bold text-white shrink-0 shadow-lg shadow-violet-500/20">
             {user?.name?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden">
             <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{user?.name}</h4>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-500 uppercase">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-violet-500/15 to-cyan-500/15 text-violet-600 dark:text-cyan-400 uppercase border border-violet-500/20">
               {userRole}
             </span>
           </div>
@@ -106,7 +123,7 @@ const Sidebar = ({ isOpen, closeMenu }) => {
         
         <button
           onClick={logout}
-          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold text-red-500 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-rose-500/10 transition-all duration-200"
         >
           <LogOut size={16} />
           <span>Logout</span>

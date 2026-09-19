@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Environment Variables
+.env
+.env*.local
+
+# Node / Frontend Build
+**/node_modules
+**/dist
+**/build
+.npm
+npm-debug.log*
+
+# Python Build / Cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache
+.venv
+venv
+env
+
+# Local Cache / Editor files
+.vscode
+.idea
+.gemini
+.agents
+.cursorrules
+CVS
+.DS_Store
+
+# Large datasets (CSV files should be loaded via volume mount or external seeding if needed)
+*.csv
+datasets/
+!backend/datasets/
