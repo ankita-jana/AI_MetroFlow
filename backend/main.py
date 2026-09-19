@@ -30,7 +30,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], # Browsers reject wildcard '*' when allow_credentials is True
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://ai-metroflow.vercel.app",], # Browsers reject wildcard '*' when allow_credentials is True
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
