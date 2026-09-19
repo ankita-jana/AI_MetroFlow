@@ -5,7 +5,7 @@ import { Lock, Mail, Train, Shield, TrendingUp, Sparkles, Activity, Brain } from
 import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
@@ -13,6 +13,12 @@ const Login = () => {
   const [role, setRole] = useState('Admin');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -44,6 +44,7 @@ export const WebSocketProvider = ({ children }) => {
   useEffect(() => {
     if (!isAuthenticated) {
       if (wsRef.current) {
+        wsRef.current.onclose = null;
         wsRef.current.close();
         wsRef.current = null;
       }
@@ -57,6 +58,15 @@ export const WebSocketProvider = ({ children }) => {
     const connect = () => {
       if (!shouldReconnect) return;
   
+      if (wsRef.current) {
+        // Prevent duplicate connections if one is already active or connecting
+        if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
+          return;
+        }
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+      }
+
       const wsUrl = getWsUrl();
   
       console.log("Connecting to MetroFlow WebSocket:", wsUrl);
@@ -181,6 +191,7 @@ export const WebSocketProvider = ({ children }) => {
       clearTimeout(reconnectTimeout);
   
       if (wsRef.current) {
+        wsRef.current.onclose = null;
         wsRef.current.close();
         wsRef.current = null;
       }

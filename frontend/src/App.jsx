@@ -63,6 +63,7 @@ function App() {
                 >
                   {/* General Protected Pages */}
                   <Route index element={<Dashboard />} />
+                  <Route path="dashboard" element={<Dashboard />} />
                   <Route path="map" element={<MetroMapPage />} />
                   <Route path="crowd" element={<CrowdMonitoring />} />
 
