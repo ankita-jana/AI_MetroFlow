@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Minimize2, Maximize2, Sparkles, Loader2, ChevronDown } from 'lucide-react';
-import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
+import api from '../services/api';
 
 const SUGGESTED_QUESTIONS = [
   "Which stations are crowded?",
@@ -79,25 +79,35 @@ const AIChatbot = () => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post('api/chat/message', { message: userText }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.post('/chat/message', {
+        message: userText
       });
-
+    
       const botMsg = {
         id: Date.now() + 1,
         role: 'bot',
         text: res.data.reply,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
       };
+    
       setMessages(prev => [...prev, botMsg]);
+    
       if (!isOpen) setHasUnread(true);
+    
     } catch (err) {
+      console.error('MetroAI chat error:', err);
+    
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'bot',
-        text: "⚠️ I'm having trouble connecting to the server. Please ensure the backend is running.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: "⚠️ I'm having trouble connecting to the server. Please try again.",
+        time: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
       }]);
     } finally {
       setIsLoading(false);
