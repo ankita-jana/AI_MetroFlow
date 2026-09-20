@@ -1,150 +1,355 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Tooltip, Polyline, LayerGroup } from 'react-leaflet';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+} from 'react-leaflet';
 import L from 'leaflet';
 import GlassmorphicCard from '../components/GlassmorphicCard';
 import api from '../services/api';
-import { Map, Zap, Layers, Activity } from 'lucide-react';
+import { Map, Layers } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+
+/*
+ * Keep colors outside the component so they are not recreated
+ * on every render.
+ */
+const getColor = (colorStr) => {
+  switch (colorStr) {
+    case 'Red':
+      return '#ef4444';
+    case 'Orange':
+      return '#f97316';
+    case 'Yellow':
+      return '#eab308';
+    case 'Green':
+      return '#22c55e';
+    default:
+      return '#3b82f6';
+  }
+};
+
+/*
+ * Cache Leaflet icons.
+ *
+ * There are only a small number of possible combinations:
+ * - 3 sizes
+ * - 4 main colors
+ *
+ * So we can reuse the same icon instead of creating a new
+ * DOM element for every station on every render.
+ */
+const iconCache = new Map();
+
+const createHeatIcon = (station) => {
+  const density = Number(station.density) || 0;
+
+  const size =
+    density > 80
+      ? 40
+      : density > 60
+        ? 28
+        : 18;
+
+  const color = station.color || 'Green';
+  const hex = getColor(color);
+
+  const cacheKey = `${size}-${color}`;
+
+  if (iconCache.has(cacheKey)) {
+    return iconCache.get(cacheKey);
+  }
+
+  const icon = L.divIcon({
+    className: 'clear-heat-icon',
+    html: `
+      <div
+        style="
+          width: ${size}px;
+          height: ${size}px;
+          background-color: ${hex};
+          opacity: 0.85;
+          border-radius: 50%;
+          box-shadow: 0 0 ${Math.round(size * 0.7)}px ${Math.round(size * 0.2)}px ${hex};
+          pointer-events: none;
+        "
+      ></div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+
+  iconCache.set(cacheKey, icon);
+
+  return icon;
+};
+
+
+/*
+ * Individual station component.
+ *
+ * React.memo prevents a station marker from unnecessarily
+ * re-rendering when unrelated parts of the dashboard update.
+ */
+const StationMarker = React.memo(({ station }) => {
+  const position = useMemo(
+    () => [
+      Number(station.lat),
+      Number(station.lng),
+    ],
+    [station.lat, station.lng]
+  );
+
+  const icon = useMemo(
+    () => createHeatIcon(station),
+    [station.density, station.color]
+  );
+
+  const color = getColor(station.color);
+
+  return (
+    <Marker
+      position={position}
+      icon={icon}
+    >
+      <Tooltip>
+        <div className="p-2">
+          <h4 className="font-bold text-sm">
+            {station.station_name}
+          </h4>
+
+          <p className="text-xs text-slate-300">
+            Crowd Density:{' '}
+            <span className="font-black text-white">
+              {station.density}%
+            </span>
+          </p>
+
+          <p
+            className="text-[10px] uppercase font-bold tracking-wider mt-1"
+            style={{ color }}
+          >
+            {station.color} Level
+          </p>
+        </div>
+      </Tooltip>
+    </Marker>
+  );
+});
+
 
 const HeatmapDashboard = () => {
   const [heatmapData, setHeatmapData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /*
+   * Fetch data.
+   *
+   * Changed from 5 seconds to 10 seconds.
+   * This reduces unnecessary network + Leaflet rendering
+   * while still keeping the heatmap live.
+   */
   const fetchHeatmapData = async () => {
     try {
       const response = await api.get('/heatmap');
-      setHeatmapData(response.data.data || []);
+
+      const newData = response.data?.data || [];
+
+      /*
+       * Only update React state when the actual heatmap
+       * information changed.
+       *
+       * This prevents unnecessary Marker re-rendering.
+       */
+      setHeatmapData((previousData) => {
+        if (previousData.length !== newData.length) {
+          return newData;
+        }
+
+        const changed = newData.some((station, index) => {
+          const previous = previousData[index];
+
+          if (!previous) return true;
+
+          return (
+            previous.station_id !== station.station_id ||
+            previous.lat !== station.lat ||
+            previous.lng !== station.lng ||
+            previous.density !== station.density ||
+            previous.color !== station.color ||
+            previous.station_name !== station.station_name
+          );
+        });
+
+        return changed ? newData : previousData;
+      });
+
     } catch (error) {
-      console.error('Failed to fetch heatmap data:', error);
+      console.error(
+        'Failed to fetch heatmap data:',
+        error
+      );
     } finally {
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
+    /*
+     * Fetch immediately when page opens.
+     */
     fetchHeatmapData();
-    const interval = setInterval(fetchHeatmapData, 5000);
+
+    /*
+     * Refresh every 10 seconds instead of every 5 seconds.
+     */
+    const interval = setInterval(
+      fetchHeatmapData,
+      10000
+    );
+
     return () => clearInterval(interval);
   }, []);
 
-  const getColor = (colorStr) => {
-    switch (colorStr) {
-      case 'Red': return '#ef4444';
-      case 'Orange': return '#f97316';
-      case 'Yellow': return '#eab308';
-      case 'Green': return '#22c55e';
-      default: return '#3b82f6';
-    }
-  };
 
-  const createHeatIcon = (station) => {
-    // Dynamic size based on density
-    const size = station.density > 80 ? 40 : station.density > 60 ? 28 : 18;
-    const hex = getColor(station.color);
-    
-    return L.divIcon({
-      className: 'clear-heat-icon',
-      html: `
-        <div style="
-          width: ${size}px; 
-          height: ${size}px; 
-          background-color: ${hex};
-          opacity: 0.85;
-          border-radius: 50%;
-          box-shadow: 0 0 ${size}px ${size/4}px ${hex};
-          animation: pulse ${station.density > 80 ? '1.5s' : '3s'} infinite alternate;
-          pointer-events: none;
-        "></div>
-      `,
-      iconSize: [size, size],
-      iconAnchor: [size/2, size/2],
-    });
-  };
+  /*
+   * Filter invalid coordinates once per data update.
+   */
+  const validStations = useMemo(() => {
+    return heatmapData.filter(
+      (station) =>
+        Number.isFinite(Number(station.lat)) &&
+        Number.isFinite(Number(station.lng))
+    );
+  }, [heatmapData]);
+
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-black tracking-tight gradient-text flex items-center gap-2">
-          <Map className="text-rose-500" size={28} />
+          <Map
+            className="text-rose-500"
+            size={28}
+          />
+
           Congestion Heatmap
         </h1>
+
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
           Dynamic visualization of station crowding levels.
         </p>
       </div>
 
+
       <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+
+        {/* Loading overlay */}
         {loading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-            <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
-        <MapContainer 
-          center={[28.6139, 77.2090]} 
-          zoom={11} 
-          style={{ height: '100%', width: '100%', background: '#0f172a' }}
-        >
-          <TileLayer
-  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  maxZoom={19}
-/>
-          {/* Heatmap Nodes */}
-{heatmapData
-  .filter(
-    (station) =>
-      Number.isFinite(Number(station.lat)) &&
-      Number.isFinite(Number(station.lng))
-  )
-  .map((station) => (
-    <Marker
-      key={station.station_id}
-      position={[
-        Number(station.lat),
-        Number(station.lng)
-      ]}
-      icon={createHeatIcon(station)}
-    >
-              <Tooltip className="bg-slate-900/90 backdrop-blur-md border border-slate-700 text-white shadow-xl rounded-xl">
-                <div className="p-2">
-                  <h4 className="font-bold text-sm">{station.station_name}</h4>
-                  <p className="text-xs text-slate-300">Crowd Density: <span className="font-black text-white">{station.density}%</span></p>
-                  <p className="text-[10px] uppercase font-bold tracking-wider mt-1" style={{ color: getColor(station.color) }}>
-                    {station.color} Level
-                  </p>
-                </div>
-              </Tooltip>
-            </Marker>
-          ))}
-        </MapContainer>
-        
-        {/* Subtle Map Overlay Gradient */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-900/80 via-transparent to-slate-900/20 z-[300]"></div>
 
-        {/* Live Indicator Overlay */}
+
+        <MapContainer
+          center={[28.6139, 77.2090]}
+          zoom={11}
+          preferCanvas={true}
+          style={{
+            height: '100%',
+            width: '100%',
+            background: '#0f172a',
+          }}
+        >
+
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            maxZoom={19}
+          />
+
+
+          {/* Heatmap Nodes */}
+          {validStations.map((station) => (
+            <StationMarker
+              key={station.station_id}
+              station={station}
+            />
+          ))}
+
+        </MapContainer>
+
+
+        {/* Subtle Map Overlay Gradient */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-900/80 via-transparent to-slate-900/20 z-[300]" />
+
+
+        {/* Live Indicator */}
         <div className="absolute top-6 right-6 z-[400] flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-white shadow-xl">
+
           <div className="relative flex items-center justify-center">
-            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            <span className="absolute w-4 h-4 rounded-full bg-red-500 animate-ping opacity-75"></span>
+
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+
+            <span className="absolute w-4 h-4 rounded-full bg-red-500 animate-ping opacity-75" />
+
           </div>
-          <span className="text-xs font-black tracking-widest text-red-400">LIVE</span>
+
+          <span className="text-xs font-black tracking-widest text-red-400">
+            LIVE
+          </span>
+
         </div>
 
-        {/* Legend Overlay */}
+
+        {/* Legend */}
         <div className="absolute bottom-6 left-6 z-[400]">
+
           <div className="p-4 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.5)] text-white">
+
             <h4 className="text-xs font-black uppercase mb-3 flex items-center gap-2 text-slate-300">
-              <Layers size={14} className="text-blue-400" /> Density Legend
+
+              <Layers
+                size={14}
+                className="text-blue-400"
+              />
+
+              Density Legend
+
             </h4>
+
             <div className="space-y-3 text-xs font-semibold">
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_2px_#ef4444] animate-pulse"></div> Critical (&gt;80%)</div>
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_8px_2px_#f97316]"></div> High (60-80%)</div>
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_2px_#eab308]"></div> Moderate (40-60%)</div>
-              <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_2px_#22c55e]"></div> Low (&lt;40%)</div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_2px_#ef4444] animate-pulse" />
+                Critical (&gt;80%)
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_8px_2px_#f97316]" />
+                High (60-80%)
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_2px_#eab308]" />
+                Moderate (40-60%)
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_2px_#22c55e]" />
+                Low (&lt;40%)
+              </div>
+
             </div>
           </div>
+
         </div>
+
       </div>
     </div>
   );
